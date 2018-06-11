@@ -62,12 +62,68 @@ First line of institution2 address\\
 
 \section{Related Work}
 
+Multibox~\cite{erhan2014multibox}
+
+SSD~\cite{liu2016ssd}
+
+Faster-RCNN~\cite{ren2015frcnn}
+
+YOLO~\cite{redmon2016yolo}
+
+YOLO-v2~\cite{redmon2017yolov2}
+
+FPN~\cite{lin2017fpn}
+
+Survey~\cite{huang2017gmi}
+
+RetinaNet~\cite{lin2017focal}
+
 \section{Pooling Pyramid Network (PPN)}
+Our proposed model, called \textit{Pooling Pyramid Network (PPN)},
+is a single-stage convolutional object detector,
+that is designed to address several practical issues
+found in the original Single Shot Detector (SSD)~\cite{liu2016ssd}.
+The network architecture is illustrated in Figure~\ref{fig:ppn}.
+There are two major changes to the original SSD:
+(1) the box predictor is shared on feature maps with different scales;
+(2) the convolutions between feature maps are replaced with the max pooling operations.
+In the following, we will discuss these changes in more details.
+
+\subsection{Sharing Box Predictor}
+
+\subsection{Max Pooling Pyramid}
+
+\begin{figure}[t]
+\begin{center}
+\includegraphics[width=0.8\linewidth]{figure/ppn.pdf}
+\end{center}
+\caption{
+The Pooling Pyramid Network (PPN) architecture.
+}
+\label{fig:ppn}
+\end{figure}
+
+
+
+
+Our proposed syste, called Pooling Pyramid Network (PPN), is a single-stage
+object detector that is designed to address several practical issues found in
+Single Shot Detector (SSD)~\cite{liu2016ssd}.
+The network architecture is illustrated in Figure
+
+
 Our proposed architecture, called Pooling Pyramid Network (PPN), is designed
-to improve the one-stage Single Shot Detector (SSD) \cite{liu2016ssd}.
-PPN has two major upgrades to SSD.
+to address several issues found in the single-stage Singel Shot Detector (SSD)
+\cite{liu2016ssd}.
 
 \section{Experiments}
+
+\subsection{Comparing with SSD and FPN}
+Performance on COCO detection
+
+Model Size
+
+Latency
 
 \section{Conclusion}
 
