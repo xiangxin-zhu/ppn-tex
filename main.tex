@@ -25,29 +25,26 @@
 \begin{document}
 
 %%%%%%%%% TITLE
-\title{Pooling Pyramid Network (PPN) for Object Detection}
+\title{Pooling Pyramid Network for Object Detection}
 
-\author{First Author\\
-Institution1\\
-Institution1 address\\
-{\tt\small firstauthor@i1.org}
-% For a paper whose authors are all at the same institution,
-% omit the following lines up until the closing ``}''.
-% Additional authors and addresses can be added with ``\and'',
-% just like the second author.
-% To save space, use either the email address or home page, not both
-\and
-Second Author\\
-Institution2\\
-First line of institution2 address\\
-{\tt\small secondauthor@i2.org}
+\author{
+Pengchong Jin
+\hspace*{32pt}
+Vivek Rathod
+\hspace*{32pt}
+Xiangxin Zhu
+\\
+Google AI Perception\\
+{\tt\small \{pengchong, rathodv, xiangxin\}@google.com}
 }
+
 
 \maketitle
 %\thispagestyle{empty}
 
 %%%%%%%%% ABSTRACT
 \begin{abstract}
+We proposed 
    The ABSTRACT is to be in fully-justified italicized text, at the top
    of the left-hand column, below the author and affiliation
    information. Use the word ``Abstract'' as the title, in 12-point
@@ -81,17 +78,13 @@ RetinaNet~\cite{lin2017focal}
 \section{Pooling Pyramid Network (PPN)}
 Our proposed model, called \textit{Pooling Pyramid Network (PPN)},
 is a single-stage convolutional object detector,
-that is designed to address several practical issues
+that is designed to address several issues
 found in the original Single Shot Detector (SSD)~\cite{liu2016ssd}.
 The network architecture is illustrated in Figure~\ref{fig:ppn}.
 There are two major changes to the original SSD:
-(1) the box predictor is shared on feature maps with different scales;
+(1) the box predictor is shared across feature maps with different scales;
 (2) the convolutions between feature maps are replaced with the max pooling operations.
-In the following, we will discuss these changes in more details.
-
-\subsection{Sharing Box Predictor}
-
-\subsection{Max Pooling Pyramid}
+In the following sections, we will discuss the rationales behind them and effects of these changes.
 
 \begin{figure}[t]
 \begin{center}
@@ -103,23 +96,73 @@ The Pooling Pyramid Network (PPN) architecture.
 \label{fig:ppn}
 \end{figure}
 
+\subsection{Sharing Box Predictor}
+The original SSD uses separate box predictors for feature maps of different scales.
+While each box predictor is allocated to spend its full capacity on one specific scale,
+this design could be vulnerable in some practical situations.
+
+One problem raises when the training data has inbalanced groundtruth bounding boxes with different sizes.
+Because each box predictor only sees a portion of the groundtruth boxes
+whose sizes corresponds to the scale of one specific predictor,
+
+Because each box predictor only sees a portion of groundtruth boxes
+whose sizes corresponds to the predictor's scale,
+the predicted scores can be mis-calibrated across different predictors.
+corresponding to its own scale,
+the predicted scores can be mis-calibrated across different scales. 
 
 
 
-Our proposed syste, called Pooling Pyramid Network (PPN), is a single-stage
-object detector that is designed to address several practical issues found in
-Single Shot Detector (SSD)~\cite{liu2016ssd}.
-The network architecture is illustrated in Figure
 
 
-Our proposed architecture, called Pooling Pyramid Network (PPN), is designed
-to address several issues found in the single-stage Singel Shot Detector (SSD)
-\cite{liu2016ssd}.
+
+
+
+One biggest problem is mis-calibration across different box predictors
+
+
+
+this could become 
+this could also become less robust 
+
+
+we have found this design may lead to several problems in practice.
+
+
+
+focuses on one particular scales
+
+
+
+While each box predictor focuses on one specific scales
+and spends full capacity specializing 
+
+In practice, 
+
+The original SSD uses separate box predictors for feature maps with different scales. 
+
+\subsection{Max Pooling Pyramid}
+
+Our goal is to build a multi-scale feature pyramid structure, from which we can make the predictions using the shared box predictor.
+We achieve this by shrinking down a base feature map from the backbone network serval times using a series of max pooling operations.
+This is different from
+SSD where feature maps are built by extracting layers from backbone network and shrinking them using additional convolutions,
+and FPN where feature maps are built by a top-down pathway with skip connections.
+We choose max pooling mainly for two reasons.
+First, using the pooling operations ensures feature maps with different scales live in the same embedding space,
+which makes training the shared box predictor more effective.
+In addition, since max pooling does not require any additions and multiplicatons,
+it is very fast to compute during the inference,
+therefore, making it suitable for many latency sensitive applications.
 
 \section{Experiments}
 
 \subsection{Comparing with SSD and FPN}
 Performance on COCO detection
+
+MobileNet-v1-SSD vs MobileNet-v1-PPN vs MobileNet-v1-FPN
+
+
 
 Model Size
 
