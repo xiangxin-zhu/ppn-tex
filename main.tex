@@ -62,37 +62,65 @@ We'd like share a simple tweak of the SSD family detectors,
 
 %%%%%%%%% BODY TEXT
 \section{Introduction}
+The SSD family detectors
+~\cite{liu2016ssd},~\cite{lin2017focal} have
+been popular as they run fast, are simple to implementation
+and easily portable to different types of hardware.
 
-\section{Related Work}
 
-Multibox~\cite{erhan2014multibox}
+Most of the SSD detectors have several feature maps
+representing different scales, each of which uses its own
+predictor to produce the boxes and class scores.
+In practice, especially when the data distribution is skewed
+over scales, this design could run into problem. Imagine a
+dataset with tons of large objects and very few small ones.
+Those predictors from the small scale feature maps will be
+wasted as they rarely see any positives. This data imbalance
+could also result in score miscalibration across scale even
+for the same class. Another issue under this design is, each
+predictor only sees the objects at its own scale. This
+partitions the oftentimes already small dataset
+into even smaller pieces. If we believe the object
+appearance is scale invariant, it will be a more efficient
+way of using the data if all the predictors see all the
+data.
 
-SSD~\cite{liu2016ssd}
+We propose simple changes to the SSD: use the same predictor
+in all scales. In order for the predictor to work in the
+same feature space, we replace the convolutions between
+feature maps with max pooling.
 
-Faster-RCNN~\cite{ren2015frcnn}
+%\section{Related Work}
 
-YOLO~\cite{redmon2016yolo}
+%Multibox~\cite{erhan2014multibox}
 
-YOLO-v2~\cite{redmon2017yolov2}
 
-FPN~\cite{lin2017fpn}
 
-Survey~\cite{huang2017gmi}
+%YOLO~\cite{redmon2016yolo}
 
-RetinaNet~\cite{lin2017focal}
+%YOLO-v2~\cite{redmon2017yolov2}
+
+%FPN~\cite{lin2017fpn}
+
+%Survey~\cite{huang2017gmi}
+
 
 \section{Pooling Pyramid Network (PPN)}
-Our proposed model, called \textit{Pooling Pyramid Network (PPN)},
-is a single-stage convolutional object detector,
-that is designed to be light-weighted, fast to run,
-while maintains the good detection accuracy.
-The network architecture is illustrated in Figure~\ref{fig:ppn}.
-There are two major changes to the original SSD~\cite{liu2016ssd}:
-(1) the convolutions between feature maps are replaced with the max pooling operations.
-(2) the box predictor is shared across feature maps with different scales;
-In the following sections, we will discuss the rationales behind them and effects of these changes.
+The proposed model, \textit{Pooling Pyramid Network (PPN)},
+is a single-stage convolutional object detector, very
+similar to SSD with simple changes.  The prediction head is
+designed to be light-weighted, fast to run, while maintains
+the comparable detection accuracy with its SSD counterpart.
+The network architecture is illustrated in
+Figure~\ref{fig:ppn}.  There are two major changes to the
+original SSD~\cite{liu2016ssd}: (1) the box predictor is
+shared across feature maps with different scales; (2) the
+convolutions between feature maps are replaced with the max
+pooling operations.  In the following sections, we will
+discuss the rationales behind them and effects of these
+changes.
 
-\begin{figure}[t]
+\begin{figure*}[t]
 \begin{center}
 \includegraphics[width=0.8\linewidth]{figure/ppn.pdf}
 \end{center}
@@ -102,14 +130,41 @@ In the following sections, we will discuss the rationales behind them and effect
   to illustrate the two main changes.}
 }
 \label{fig:ppn}
-\end{figure}
+\end{figure*}
+
+\subsection{Shared Box Predictor}
+The SSD uses independent box predictors for feature maps at different scales.
+The one potential problem is miscalibration of the prediction scores across different scales.
+
+Since each box predictor is trained independently using only
+a portion of the groundtruth boxes that it is assigned to,
+different box predictors could see very different amount of
+positive and negative examples during the training.  This
+implicit data imbalance could cause the problem that scores
+from different predictors fall in vastly different ranges,
+which makes them incomparable and difficult to use in the
+subsequent score-based postprocessing such as non maximum
+suppression.  We design PPN with a shared box predictor
+across feature maps of different scales.  As a result, the
+box predictor sees all the training data during the training
+when there are imbalance groundtruth boxes with different scales.
+This reduces the effect of miscalibration and unstable prediction
+scores.
+
+One could argue that having separate box predictor for each
+scale increases the total capacity, and allows each
+predictor to focus at its specific scale. However, we think
+hat this may not be necessary as objects are mostly scale
+invariant. In practice, Faster-RCNN~\cite{ren2015frcnn}
+works well with a single shared predictor.
+
 
 \subsection{Max Pooling Pyramid}
 
 Our goal is to build a multi-scale feature pyramid
 structure, from which we can make the predictions using the
 shared box predictor.  We achieve this by shrinking down a
-base feature map from the backbone network serval times
+base feature map from the backbone network several times
 using a series of max pooling operations.  This is different
 from SSD where feature maps are built by extracting layers
 from backbone network and shrinking them using additional
@@ -129,34 +184,21 @@ making it suitable for many latency sensitive applications.
 %  the shared predictor sees the training data over all
 %  scale.
 
-
-\subsection{Shared Box Predictor}
-The original SSD uses separate box predictors for feature maps of different scales.
-While in this design
-each box predictor is allocated to spend its full capacity on box prediction of one specific scale,
-one potential problem is miscalibration of the prediction scores across different scales.
-Because each box predictor is trained independently using only a portion of the groundtruth boxes that it is assigned to,
-different box predictors could see very different amount of positive and negative examples during the training.
-This implicit data imbalance problem could potentially cause the problem that
-scores from different predictors fall in a very different ranges,
-which makes them incomparable and difficult to use in the subsequent score-based postprocessing such as non maximum suppression.
-We design PPN to use the shared box predictor accross feature maps of different scales.
-As a result, the box predictor sees all the training data during the training
-and implicitly argument the data when there are imbalance groundtruth boxes with different scales.
-As a result, this reduces the effect of miscalibration and instable prediction scores.
-
-
 \subsection{Overall Architecture}
 
 
-
-The final network architecture of our Pooling Pyramid Network (PPN) detector is illustrated in Figure~\ref{fig:ppn}.
-Followed by the backbone network, an optional 1x1 convolution is used to transform the features from the backbone network to a space with desired dimensions.
-We then apply a series of stride-2 max pooling operations to shrink the feature map down to 1x1.
-A shared box predictor is applied to feature maps of different scales
-in order to produce classification scores and location offsets of box predictions.
-We add one additional shared convolution in the box predictor after pooling operations
-to prepare the feature to be used for predictions.
+The final network architecture of our Pooling Pyramid
+Network (PPN) detector is illustrated in
+Figure~\ref{fig:ppn}.  Followed by the backbone network, an
+optional 1x1 convolution is used to transform the features
+from the backbone network to a space with desired
+dimensions.  We then apply a series of stride-2 max pooling
+operations to shrink the feature map down to 1x1.  A shared
+box predictor is applied to feature maps of different scales
+in order to produce classification scores and location
+offsets of box predictions.  We add one additional shared
+convolution in the box predictor after pooling operations to
+prepare the feature to be used for predictions.
 
 
 \section{Experiments}
@@ -177,8 +219,6 @@ MobileNet PPN & 1 & 1 & 1 & 1 & 1 \\
 \end{center}
 \caption{COCO detection: MobileNet SSD vs MobileNet PPN}
 \end{table*}
-
-
 
 
 {\small
