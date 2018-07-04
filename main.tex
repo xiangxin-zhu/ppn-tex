@@ -14,6 +14,8 @@
 % run, let it finish, and you should be clear).
 \usepackage[breaklinks=true,bookmarks=false]{hyperref}
 
+\newcommand{\todo}[1]{\textcolor{red}{[Todo: #1]}}
+
 \cvprfinalcopy % *** Uncomment this line for the final submission
 
 \def\cvprPaperID{****} % *** Enter the CVPR Paper ID here
@@ -44,14 +46,18 @@ Google AI Perception\\
 
 %%%%%%%%% ABSTRACT
 \begin{abstract}
-We proposed 
-   The ABSTRACT is to be in fully-justified italicized text, at the top
-   of the left-hand column, below the author and affiliation
-   information. Use the word ``Abstract'' as the title, in 12-point
-   Times, boldface type, centered relative to the column, initially
-   capitalized. The abstract is to be in 10-point, single-spaced type.
-   Leave two blank lines after the Abstract, then begin the main text.
-   Look at previous CVPR abstracts to get a feel for style and length.
+We'd like share a simple tweak of the SSD family detectors,
+  which is effective in reducing the model size while
+  maintaining the same quality. We share the predictors
+  across all the scales, and replace the convolution between
+  scales with max pooling. This has two advantages over the 
+  SSD: (1) avoids score miscalibration across scales; (2)
+  the shared predictor sees the training data over all
+  scale. Since we reduce the number of predictor to one, and
+  trim all the convolutions between them, the model size is
+  significantly reduced. We empirically found that it didn't
+  hurt the model quality compared with its SSD counterpart.
+
 \end{abstract}
 
 %%%%%%%%% BODY TEXT
@@ -91,24 +97,37 @@ In the following sections, we will discuss the rationales behind them and effect
 \includegraphics[width=0.8\linewidth]{figure/ppn.pdf}
 \end{center}
 \caption{
-The Pooling Pyramid Network (PPN) architecture.
+  The Pooling Pyramid Network (PPN) architecture.
+  \todo{Replace this with a comparison between SSD and PPN
+  to illustrate the two main changes.}
 }
 \label{fig:ppn}
 \end{figure}
 
 \subsection{Max Pooling Pyramid}
 
-Our goal is to build a multi-scale feature pyramid structure, from which we can make the predictions using the shared box predictor.
-We achieve this by shrinking down a base feature map from the backbone network serval times using a series of max pooling operations.
-This is different from
-SSD where feature maps are built by extracting layers from backbone network and shrinking them using additional convolutions,
-and FPN where feature maps are built by a top-down pathway with skip connections.
-We choose max pooling mainly for two reasons.
-First, using the pooling operations ensures feature maps with different scales live in the same embedding space,
-which makes training the shared box predictor more effective.
-In addition, since max pooling does not require any additions and multiplicatons,
-it is very fast to compute during the inference,
-therefore, making it suitable for many latency sensitive applications.
+Our goal is to build a multi-scale feature pyramid
+structure, from which we can make the predictions using the
+shared box predictor.  We achieve this by shrinking down a
+base feature map from the backbone network serval times
+using a series of max pooling operations.  This is different
+from SSD where feature maps are built by extracting layers
+from backbone network and shrinking them using additional
+convolutions, and FPN where feature maps are built by a
+top-down pathway with skip connections.  We choose max
+pooling mainly for two reasons.  First, using the pooling
+operations ensures feature maps with different scales live
+in the same embedding space, which makes training the shared
+box predictor more effective.  In addition, since max
+pooling does not require any additions and multiplicatons,
+it is very fast to compute during the inference, therefore,
+making it suitable for many latency sensitive applications.
+
+% (1) avoids score miscalibration across scales, which
+%  could be a problem if the object size distribution is
+%  skewed and each scale makes independent predictions; (2)
+%  the shared predictor sees the training data over all
+%  scale.
 
 
 \subsection{Shared Box Predictor}
