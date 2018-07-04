@@ -23,7 +23,7 @@
 
 % Pages are numbered in submission mode, and unnumbered in camera-ready
 %\ifcvprfinal\pagestyle{empty}\fi
-\setcounter{page}{4321}
+%\setcounter{page}{4321}
 \begin{document}
 
 %%%%%%%%% TITLE
@@ -204,6 +204,13 @@ prepare the feature to be used for predictions.
 \section{Experiments}
 
 \subsection{Comparing SSD and PPN}
+
+We run the experiments on COCO~\cite{coco} using Google
+Object Detection API~\cite{api}. We perform the benchmark on
+Titan X \todo{fill the citation and benchmark specifics?}
+
+\todo{Can we have the model size, FLOPs of both the whole
+models and the prediction head in the table?}
 
 
 \begin{table*}[t]
