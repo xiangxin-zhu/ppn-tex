@@ -121,12 +121,14 @@ changes.
 
 \begin{figure*}[t]
 \begin{center}
-\includegraphics[width=0.8\linewidth]{figure/ppn.pdf}
+\includegraphics[width=1.0\linewidth]{figure/ppn_vs_ssd.pdf}
 \end{center}
 \caption{
-  The Pooling Pyramid Network (PPN) architecture.
-  \todo{Replace this with a comparison between SSD and PPN
-  to illustrate the two main changes.}
+The architecture comparison between the Pooling Pyramid Network (PPN)
+and SSD. Left: SSD, Right: PPN.
+Note that the changes in PPN are highlighted:
+(1) using max pool to build the feature pyramid,
+(2) using the shared convolutional predictor for box classification and regression.
 }
 \label{fig:ppn}
 \end{figure*}
@@ -190,16 +192,33 @@ experimented with that yet.
 %  the shared predictor sees the training data over all
 %  scale.
 
+\begin{table*}[t]
+\begin{center}
+\begin{tabular}{l|c|c|c|c}
+Model & mAP & inference FLOPs & number of parameters & GPU inference time\\
+\hline
+\hline
+MobileNet SSD & 20.0 & 2.48B & 6.83M & 27ms \\
+\hline
+MobileNet PPN & 19.7 & 2.35B & 2.18M & 26ms \\
+\end{tabular}
+\end{center}
+\caption{COCO detection: MobileNet SSD vs MobileNet PPN}
+\label{comparison}
+\end{table*}
+
+
+
 \subsection{Overall Architecture}
 
 
 The final network architecture of our Pooling Pyramid
 Network (PPN) detector is illustrated in
 Figure~\ref{fig:ppn}.  Followed by the backbone network, an
-optional 1x1 convolution is used to transform the features
+optional $1\times 1$ convolution is used to transform the features
 from the backbone network to a space with desired
 dimensions.  We then apply a series of stride-2 max pooling
-operations to shrink the feature map down to 1x1.  A shared
+operations to shrink the feature map down to $1\times 1$.  A shared
 box predictor is applied to feature maps of different scales
 in order to produce classification scores and location
 offsets of box predictions.  We add one additional shared
@@ -209,12 +228,14 @@ prepare the feature to be used for predictions.
 
 \section{Experiments}
 
-We run the experiments on COCO~\cite{lin2014coco} detection dataset.
-We use MobileNet v1~\cite{howard2017mobilenet} as the backbone network,
-which is pre-trained on ImageNet.
-We set the input resolution to be $300\times 300$ and
-extract the layer \textit{Conv2d\_11\_pointwise} as the base feature map,
-from where we build 6 pooled feature maps that are of sizes
+We run the experiments on COCO~\cite{lin2014coco} detection dataset
+and compare the performance of PPN with SSD.
+We use MobileNet v1~\cite{howard2017mobilenet} as the backbone network
+and set the input resolution to be $300\times 300$.
+We use the standard implementation of MobileNet-v1 SSD in Google Object Detection API~\cite{huang2017gmi}.
+For PPN,
+we extract the layer \textit{Conv2d\_11\_pointwise} as the base feature map,
+from which we build 6 pooled feature maps that are of sizes
 $19\times 19$,
 $10\times 10$,
 $5\times 5$,
@@ -223,35 +244,30 @@ $2\times 2$, and
 $1\times 1$.
 A shared $1\times 1$ depth 512 convolution is applied before the box classifier and location regressor.
 We use the similar anchor design as SSD,
-the smooth l1 loss for box regression,
+the smooth $l_{1}$ loss for box regression,
 and the focal loss with $\alpha=0.25$ and $\gamma=2$ for box classification.
-Our implementation is based on Google Object Detection API~\cite{huang2017gmi}
+Our implementation is based on Google Object Detection API
 and it is publicly available under Tensorflow's Github repository.
 
-
-\subsection{Comparing SSD and PPN}
-
-We run the experiments on COCO~\cite{coco} using Google
-Object Detection API~\cite{api}. We perform the benchmark on
-Titan X \todo{fill the citation and benchmark specifics?}
+Both SSD and PPN models are initialized using the MobileNet-v1 checkpoint
+that is pre-trained on ImageNet, and
+both of them are trained on \texttt{trainval35k} and tested on \texttt{minival}.
+\todo{Vivek@, can you confirm the train and val sets are correct here?}
+We leverage Google Cloud TPU for fast training.
+We perform the model benchmark using an Nvidia GeForce GTX TITAN X card.
+Table \ref{comparison} shows the comparison between SSD and PPN.
+PPN achieves the similar mAP (19.7 vs 20.0),
+comparable FLOPs and inference time,
+but 3x smaller in model size.
 
 \todo{Can we have the model size, FLOPs of both the whole
-models and the prediction head in the table?}
-
-
-\begin{table*}[t]
-\begin{center}
-\begin{tabular}{l|c|c|c|c|c}
-Model & AP & AP50 & AP75 & FLOPs & number of parameters \\
-\hline
-\hline
-MobileNet SSD & 1 & 1 & 1 & 1 & 1 \\
-\hline
-MobileNet PPN & 1 & 1 & 1 & 1 & 1 \\
-\end{tabular}
-\end{center}
-\caption{COCO detection: MobileNet SSD vs MobileNet PPN}
-\end{table*}
+models and the prediction head in the table?
+Xiangxin@, I am not sure if this is worth to put here.
+For model size, it seems obvious that people would know the reduction comes from the head (sharing).
+For FLOPs, I am not sure it's benefitical to break it down.
+Their numbers are very close (sharing won't change the FLOPs becaue it doesn't reduce the computation).
+WDYT
+}
 
 
 {\small
