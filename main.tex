@@ -179,12 +179,15 @@ pooling does not require any additions and multiplicatons,
 it is very fast to compute during the inference, therefore,
 making it suitable for many latency sensitive applications.
 
-Note that the seemingly more intuitive average pooling does
+/todo{Note that the seemingly more intuitive average pooling does
 not work here, because it is a linear operation so that the
 scores from the lower level feature maps would be higher than
 those from the pooled ones. It might work if nonlinear ops
 are inserted before the predictors, but we haven't
 experimented with that yet.
+Xiangxin@, since we add one conv (with relu) before the predictor,
+I think this claim is no longer true. Maybe we should remove it?
+}
 
 % (1) avoids score miscalibration across scales, which
 %  could be a problem if the object size distribution is
