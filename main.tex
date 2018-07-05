@@ -62,9 +62,8 @@ We'd like share a simple tweak of the SSD family detectors,
 
 %%%%%%%%% BODY TEXT
 \section{Introduction}
-The SSD family detectors
-~\cite{liu2016ssd},~\cite{lin2017focal} have
-been popular as they run fast, are simple to implementation
+The SSD family detectors~\cite{liu2016ssd,lin2017focal} have
+been popular as they run fast, are simple to implement
 and easily portable to different types of hardware.
 
 
@@ -77,9 +76,9 @@ dataset with tons of large objects and very few small ones.
 Those predictors from the small scale feature maps will be
 wasted as they rarely see any positives. This data imbalance
 could also result in score miscalibration across scale even
-for the same class. Another issue under this design is, each
-predictor only sees the objects at its own scale. This
-partitions the oftentimes already small dataset
+for the same class. Another issue under this design is that
+each predictor only sees the objects at its own scale. This
+partitions will divide the already small dataset
 into even smaller pieces. If we believe the object
 appearance is scale invariant, it will be a more efficient
 way of using the data if all the predictors see all the
@@ -209,6 +208,26 @@ prepare the feature to be used for predictions.
 
 
 \section{Experiments}
+
+We run the experiments on COCO~\cite{lin2014coco} detection dataset.
+We use MobileNet v1~\cite{howard2017mobilenet} as the backbone network,
+which is pre-trained on ImageNet.
+We set the input resolution to be $300\times 300$ and
+extract the layer \textit{Conv2d\_11\_pointwise} as the base feature map,
+from where we build 6 pooled feature maps that are of sizes
+$19\times 19$,
+$10\times 10$,
+$5\times 5$,
+$3\times 3$,
+$2\times 2$, and
+$1\times 1$.
+A shared $1\times 1$ depth 512 convolution is applied before the box classifier and location regressor.
+We use the similar anchor design as SSD,
+the smooth l1 loss for box regression,
+and the focal loss with $\alpha=0.25$ and $\gamma=2$ for box classification.
+Our implementation is based on Google Object Detection API~\cite{huang2017gmi}
+and it is publicly available under Tensorflow's Github repository.
+
 
 \subsection{Comparing SSD and PPN}
 
