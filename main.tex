@@ -179,15 +179,14 @@ pooling does not require any additions and multiplicatons,
 it is very fast to compute during the inference, therefore,
 making it suitable for many latency sensitive applications.
 
-\todo{Note that the seemingly more intuitive average pooling does
-not work here, because it is a linear operation so that the
+One may use the seemingly more intuitive avearge pooling
+to build the feature pyramid.
+It should be noted, however, that
+nonlinear operations after pooling need to be inserted,
+because otherwise it is a linear operations so that
 scores from the lower level feature maps would be higher than
-those from the pooled ones. It might work if nonlinear ops
-are inserted before the predictors, but we haven't
-experimented with that yet.
-Xiangxin@, since we add one conv (with relu) before the predictor,
-I think this claim is no longer true. Maybe we should remove it?
-}
+those from the pooled ones.
+We haven't experimented with the average pooling yet.
 
 % (1) avoids score miscalibration across scales, which
 %  could be a problem if the object size distribution is
@@ -235,7 +234,8 @@ We run the experiments on COCO~\cite{lin2014coco} detection dataset
 and compare the performance of PPN with SSD.
 We use MobileNet v1~\cite{howard2017mobilenet} as the backbone network
 and set the input resolution to be $300\times 300$.
-We use the standard implementation of MobileNet-v1 SSD in Google Object Detection API~\cite{huang2017gmi}.
+Both models use the standard implementation of MobileNet-v1 SSD in
+Google Object Detection API~\cite{huang2017gmi}.
 For PPN,
 we extract the layer \textit{Conv2d\_11\_pointwise} as the base feature map,
 from which we build 6 pooled feature maps that are of sizes
@@ -255,7 +255,6 @@ and it is publicly available under Tensorflow's Github repository.
 Both SSD and PPN models are initialized using the MobileNet-v1 checkpoint
 that is pre-trained on ImageNet, and
 both of them are trained on \texttt{trainval35k} and tested on \texttt{minival}.
-\todo{Vivek@, can you confirm the train and val sets are correct here?}
 We leverage Google Cloud TPU for fast training.
 We perform the model benchmark using an Nvidia GeForce GTX TITAN X card.
 Table \ref{comparison} shows the comparison between SSD and PPN.
@@ -263,14 +262,14 @@ PPN achieves the similar mAP (19.7 vs 20.0),
 comparable FLOPs and inference time,
 but 3x smaller in model size.
 
-\todo{Can we have the model size, FLOPs of both the whole
-models and the prediction head in the table?
-Xiangxin@, I am not sure if this is worth to put here.
-For model size, it seems obvious that people would know the reduction comes from the head (sharing).
-For FLOPs, I am not sure it's benefitical to break it down.
-Their numbers are very close (sharing won't change the FLOPs becaue it doesn't reduce the computation).
-WDYT
-}
+%\todo{Can we have the model size, FLOPs of both the whole
+%models and the prediction head in the table?
+%Xiangxin@, I am not sure if this is worth to put here.
+%For model size, it seems obvious that people would know the reduction comes from the head (sharing).
+%For FLOPs, I am not sure it's benefitical to break it down.
+%Their numbers are very close (sharing won't change the FLOPs becaue it doesn't reduce the computation).
+%WDYT
+%}
 
 
 {\small
