@@ -46,7 +46,7 @@ Google AI Perception\\
 
 %%%%%%%%% ABSTRACT
 \begin{abstract}
-  We'd like share a simple tweak of the Single Shot Multibox Detector
+  We'd like to share a simple tweak of the Single Shot Multibox Detector
   (SSD) family of detectors,
   which is effective in reducing model size while
   maintaining the same quality. We share box predictors
@@ -112,7 +112,7 @@ designed to be light-weight, fast to run, while maintaining
 comparable detection accuracy with vanilla SSD.
 The network architecture is illustrated in
 Figure~\ref{fig:ppn}.  There are two major changes to
-original SSD~\cite{liu2016ssd}: (1) the box predictor is
+vanilla SSD~\cite{liu2016ssd}: (1) the box predictor is
 shared across feature maps with different scales; (2) the
 convolutions between feature maps are replaced with max
 pooling operations.  In the following sections, we will
@@ -153,9 +153,10 @@ the effect of miscalibration and unstable prediction scores.
 One could argue that having a separate box predictor for each
 scale increases the total capacity, and allows each
 predictor to focus on its specific scale. However, we think
-hat this may not be necessary as objects are mostly scale
-invariant. In practice, Faster-RCNN~\cite{ren2015frcnn}
-works well with a single shared predictor.
+that this may not be necessary as objects are mostly scale
+invariant.
+%In practice, Faster-RCNN~\cite{ren2015frcnn}
+%works well with a single shared predictor.
 
 
 \subsection{Max Pooling Pyramid}
@@ -246,9 +247,8 @@ and is publicly available under Tensorflow's Github repository.
 
 Both SSD and PPN models are initialized using a MobileNet-v1 checkpoint
 that is pre-trained on ImageNet, and
-both of them are trained and tested on the splits described in
-~\cite{huang2017gmi}.
-We leverage Google Cloud TPU for fast training.
+both of them are trained and tested on the splits described in~\cite{huang2017gmi}.
+We leverage TPUs~\cite{Jouppi2017tpu} for fast training.
 We perform the model benchmark using an Nvidia GeForce GTX TITAN X card.
 Table \ref{comparison} shows the comparison between SSD and PPN.
 PPN achieves similar mAP (20.3 vs 20.8),
