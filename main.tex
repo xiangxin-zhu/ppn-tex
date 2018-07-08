@@ -84,7 +84,7 @@ into even smaller sets. If we believe that object
 appearance is scale invariant, it will be more efficient
 if all the predictors see all of the data.
 
-We propose simple changes to SSD: use the same predictor
+We propose simple changes to vanilla SSD: use the same predictor
 for all scales. In order for the predictor to work in the
 same feature space, we replace convolutions between
 feature maps with max pooling.
@@ -109,14 +109,14 @@ The proposed model, \textit{Pooling Pyramid Network (PPN)},
 is a single-stage convolutional object detector, very
 similar to vanilla SSD with simple changes.  The prediction head is
 designed to be light-weight, fast to run, while maintaining
-comparable detection accuracy with SSD.
+comparable detection accuracy with vanilla SSD.
 The network architecture is illustrated in
 Figure~\ref{fig:ppn}.  There are two major changes to
 original SSD~\cite{liu2016ssd}: (1) the box predictor is
 shared across feature maps with different scales; (2) the
 convolutions between feature maps are replaced with max
 pooling operations.  In the following sections, we will
-discuss the rationale behind these changes and discuss their effects.
+discuss the rationale behind these changes and their effects.
 
 \begin{figure*}[t]
 \begin{center}
@@ -133,7 +133,7 @@ Note that the changes in PPN are highlighted:
 \end{figure*}
 
 \subsection{Shared Box Predictor}
-SSD uses independent box predictors for feature maps at different scales.
+Vanilla SSD uses independent box predictors for feature maps at different scales.
 One problem is miscalibration of the prediction scores across different scales.
 
 Since each box predictor is trained independently using only
@@ -152,7 +152,7 @@ the effect of miscalibration and unstable prediction scores.
 
 One could argue that having a separate box predictor for each
 scale increases the total capacity, and allows each
-predictor to focus at its specific scale. However, we think
+predictor to focus on its specific scale. However, we think
 hat this may not be necessary as objects are mostly scale
 invariant. In practice, Faster-RCNN~\cite{ren2015frcnn}
 works well with a single shared predictor.
@@ -165,7 +165,7 @@ structure, from which we can make predictions using the
 shared box predictor.  We achieve this by shrinking a
 base feature map from the backbone network several times
 using a series of max pooling operations.  This is different
-from SSD where feature maps are built by extracting layers
+from vanilla SSD where feature maps are built by extracting layers
 from a backbone network and shrinking them using additional
 convolutions, and FPN where feature maps are built by a
 top-down pathway with skip connections.  We choose max
@@ -177,20 +177,14 @@ pooling does not require any additions and multiplications,
 it is very fast to compute during inference,
 making it suitable for many latency sensitive applications.
 
-One may use the seemingly more intuitive average pooling
-to build the feature pyramid.
-It should be noted, however, that
-nonlinear operations after pooling need to be inserted,
-because otherwise it is a linear operations so that
-scores from the lower level feature maps would be higher than
-those from the pooled ones.
-We haven't experimented with the average pooling yet.
-
-% (1) avoids score miscalibration across scales, which
-%  could be a problem if the object size distribution is
-%  skewed and each scale makes independent predictions; (2)
-%  the shared predictor sees the training data over all
-%  scale.
+%One may use the seemingly more intuitive average pooling
+%to build the feature pyramid.
+%It should be noted, however, that
+%nonlinear operations after pooling need to be inserted,
+%because otherwise it is a linear operations so that
+%scores from the lower level feature maps would be higher than
+%those from the pooled ones.
+%We haven't experimented with the average pooling yet.
 
 \begin{table*}[t]
 \begin{center}
@@ -198,9 +192,9 @@ We haven't experimented with the average pooling yet.
 Model & mAP & inference FLOPs & number of parameters & GPU inference time\\
 \hline
 \hline
-MobileNet SSD & 20.0 & 2.48B & 6.83M & 27ms \\
+MobileNet SSD & 20.8 & 2.48B & 6.83M & 27ms \\
 \hline
-MobileNet PPN & 19.7 & 2.35B & 2.18M & 26ms \\
+MobileNet PPN & 20.3 & 2.35B & 2.18M & 26ms \\
 \end{tabular}
 \end{center}
 \caption{COCO detection: MobileNet SSD vs MobileNet PPN}
@@ -257,18 +251,9 @@ both of them are trained and tested on the splits described in
 We leverage Google Cloud TPU for fast training.
 We perform the model benchmark using an Nvidia GeForce GTX TITAN X card.
 Table \ref{comparison} shows the comparison between SSD and PPN.
-PPN achieves similar mAP (19.7 vs 20.0),
+PPN achieves similar mAP (20.3 vs 20.8),
 comparable FLOPs and inference time,
 but is 3x smaller in model size.
-
-%\todo{Can we have the model size, FLOPs of both the whole
-%models and the prediction head in the table?
-%Xiangxin@, I am not sure if this is worth to put here.
-%For model size, it seems obvious that people would know the reduction comes from the head (sharing).
-%For FLOPs, I am not sure it's benefitical to break it down.
-%Their numbers are very close (sharing won't change the FLOPs becaue it doesn't reduce the computation).
-%WDYT
-%}
 
 
 {\small
