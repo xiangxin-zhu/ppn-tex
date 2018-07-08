@@ -48,16 +48,16 @@ Google AI Perception\\
 \begin{abstract}
   We'd like share a simple tweak of the Single Shot Multibox Detector
   (SSD) family of detectors,
-  which is effective in reducing the model size while
-  maintaining the same quality. We share the box predictors
-  across all the scales, and replace the convolution between
-  scales with max pooling. This has two advantages over
-  SSD: (1) avoids score miscalibration across scales; (2)
+  which is effective in reducing model size while
+  maintaining the same quality. We share box predictors
+  across all scales, and replace convolution between
+  scales with max pooling. This has two advantages over vanilla
+  SSD: (1) it avoids score miscalibration across scales; (2)
   the shared predictor sees the training data over all
-  scales. Since we reduce the number of predictor to one, and
-  trim all the convolutions between them, the model size is
-  significantly small. We empirically show that these changes
-  does not hurt the model quality compared to SSD.
+  scales. Since we reduce the number of predictors to one, and
+  trim all convolutions between them, model size is
+  significantly smaller. We empirically show that these changes
+  does not hurt model quality compared to vanilla SSD.
 
 \end{abstract}
 
@@ -68,25 +68,25 @@ been popular as they run fast, are simple to implement
 and easily portable to different types of hardware.
 
 
-Most of the SSD detectors have several feature maps
+Most SSD detectors have several feature maps
 representing different scales, each of which uses its own
-predictor to produce the boxes and class scores.
+predictor to produce boxes and class scores.
 In practice, especially when the data distribution is skewed
 over scales, this design is problematic. Imagine a
-dataset with tons of large objects and very few small ones.
+dataset with many large objects and very few small ones.
 The predictors from small scale feature maps will be
 wasted as they rarely see any positives. This data imbalance
-could also result in score miscalibration across scale even
+could also result in score miscalibration across scales even
 for the same class. Another issue with this design is that
 each predictor only sees the objects at its own scale. This
 partition will divide the already small dataset
-into even smaller sets. If we believe the object
-appearance is scale invariant, it will be a more efficient
+into even smaller sets. If we believe that object
+appearance is scale invariant, it will be more efficient
 if all the predictors see all of the data.
 
 We propose simple changes to SSD: use the same predictor
 for all scales. In order for the predictor to work in the
-same feature space, we replace the convolutions between
+same feature space, we replace convolutions between
 feature maps with max pooling.
 
 %\section{Related Work}
@@ -107,14 +107,14 @@ feature maps with max pooling.
 \section{Pooling Pyramid Network (PPN)}
 The proposed model, \textit{Pooling Pyramid Network (PPN)},
 is a single-stage convolutional object detector, very
-similar to SSD with simple changes.  The prediction head is
+similar to vanilla SSD with simple changes.  The prediction head is
 designed to be light-weight, fast to run, while maintaining
 comparable detection accuracy with SSD.
 The network architecture is illustrated in
 Figure~\ref{fig:ppn}.  There are two major changes to
 original SSD~\cite{liu2016ssd}: (1) the box predictor is
 shared across feature maps with different scales; (2) the
-convolutions between feature maps are replaced with the max
+convolutions between feature maps are replaced with max
 pooling operations.  In the following sections, we will
 discuss the rationale behind these changes and discuss their effects.
 
@@ -123,11 +123,11 @@ discuss the rationale behind these changes and discuss their effects.
 \includegraphics[width=1.0\linewidth]{figure/ppn_vs_ssd.pdf}
 \end{center}
 \caption{
-The architecture comparison between the Pooling Pyramid Network (PPN)
-and SSD. Left: SSD, Right: PPN.
+Architecture comparison between the Pooling Pyramid Network (PPN)
+and vanilla SSD. Left: vanilla SSD, Right: PPN.
 Note that the changes in PPN are highlighted:
 (1) using max pool to build the feature pyramid,
-(2) using shared convolutional predictor for box classification and regression.
+(2) using shared convolutional predictors for box classification and regression.
 }
 \label{fig:ppn}
 \end{figure*}
@@ -138,19 +138,19 @@ One problem is miscalibration of the prediction scores across different scales.
 
 Since each box predictor is trained independently using only
 a portion of the groundtruth boxes that it is assigned to,
-different box predictors could see very different amount of
-positive and negative examples during the training.  This
+different box predictors could see very different number of
+positive and negative examples during training.  This
 implicit data imbalance causes the problem that scores
 from different predictors fall in vastly different ranges,
-which makes them incomparable and difficult to use in the
+which makes them incomparable and difficult to use in
 subsequent score-based postprocessing steps such as non maximum
 suppression.  We design PPN with a shared box predictor
 across feature maps of different scales.  As a result, the
-box predictor sees all of the training data during even when
+box predictor sees all of the training data even when
 there is an imbalance in groundtruth box scales. This reduces
 the effect of miscalibration and unstable prediction scores.
 
-One could argue that having separate box predictor for each
+One could argue that having a separate box predictor for each
 scale increases the total capacity, and allows each
 predictor to focus at its specific scale. However, we think
 hat this may not be necessary as objects are mostly scale
@@ -161,23 +161,23 @@ works well with a single shared predictor.
 \subsection{Max Pooling Pyramid}
 
 Our goal is to build a multi-scale feature pyramid
-structure, from which we can make the predictions using the
-shared box predictor.  We achieve this by shrinking down a
+structure, from which we can make predictions using the
+shared box predictor.  We achieve this by shrinking a
 base feature map from the backbone network several times
 using a series of max pooling operations.  This is different
 from SSD where feature maps are built by extracting layers
-from backbone network and shrinking them using additional
+from a backbone network and shrinking them using additional
 convolutions, and FPN where feature maps are built by a
 top-down pathway with skip connections.  We choose max
 pooling mainly for two reasons.  First, using the pooling
 operations ensures feature maps with different scales live
 in the same embedding space, which makes training the shared
 box predictor more effective.  In addition, since max
-pooling does not require any additions and multiplicatons,
-it is very fast to compute during the inference, therefore,
+pooling does not require any additions and multiplications,
+it is very fast to compute during inference,
 making it suitable for many latency sensitive applications.
 
-One may use the seemingly more intuitive avearge pooling
+One may use the seemingly more intuitive average pooling
 to build the feature pyramid.
 It should be noted, however, that
 nonlinear operations after pooling need to be inserted,
@@ -228,12 +228,12 @@ prepare the feature to be used for predictions.
 
 \section{Experiments}
 
-We run the experiments on COCO~\cite{lin2014coco} detection dataset
-and compare the performance of PPN with SSD.
+We run experiments on the COCO~\cite{lin2014coco} detection dataset
+and compare the performance of PPN with vanilla SSD.
 We use MobileNet v1~\cite{howard2017mobilenet} as the backbone network
 and set the input resolution to be $300\times 300$.
 Both models use the standard implementation of MobileNet-v1 SSD in
-Google Object Detection API~\cite{huang2017gmi}.
+the Tensorflow Object Detection API~\cite{huang2017gmi}.
 For PPN,
 we extract the layer \textit{Conv2d\_11\_pointwise} as the base feature map,
 from which we build 6 pooled feature maps that are of sizes
@@ -244,22 +244,22 @@ $3\times 3$,
 $2\times 2$, and
 $1\times 1$.
 A shared $1\times 1$ depth 512 convolution is applied before the box classifier and location regressor.
-We use the similar anchor design as SSD,
-the smooth $l_{1}$ loss for box regression,
-and the focal loss with $\alpha=0.25$ and $\gamma=2$ for box classification.
-Our implementation is based on Google Object Detection API
-and it is publicly available under Tensorflow's Github repository.
+We use the same anchor design as SSD,
+smooth $l_{1}$ loss for box regression,
+and focal loss with $\alpha=0.25$ and $\gamma=2$ for box classification~\cite{lin2017focal}.
+Our implementation is based on the Tensorflow Object Detection API
+and is publicly available under Tensorflow's Github repository.
 
-Both SSD and PPN models are initialized using the MobileNet-v1 checkpoint
+Both SSD and PPN models are initialized using a MobileNet-v1 checkpoint
 that is pre-trained on ImageNet, and
 both of them are trained and tested on the splits described in
 ~\cite{huang2017gmi}.
 We leverage Google Cloud TPU for fast training.
 We perform the model benchmark using an Nvidia GeForce GTX TITAN X card.
 Table \ref{comparison} shows the comparison between SSD and PPN.
-PPN achieves the similar mAP (19.7 vs 20.0),
+PPN achieves similar mAP (19.7 vs 20.0),
 comparable FLOPs and inference time,
-but 3x smaller in model size.
+but is 3x smaller in model size.
 
 %\todo{Can we have the model size, FLOPs of both the whole
 %models and the prediction head in the table?
